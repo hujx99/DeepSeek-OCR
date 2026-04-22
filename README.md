@@ -6,7 +6,7 @@ DocFlow OCR is a production-oriented MVP for the workflow:
 
 Upload document/image -> async OCR processing -> review/edit result -> export final output.
 
-The app uses a mock OCR provider by default so the full product flow runs without GPU setup. DeepSeek-OCR-2 is isolated behind the same provider interface and can be enabled later without changing the UI contract.
+The app uses a mock OCR provider by default so the full product flow runs without GPU setup. DeepSeek-OCR-2 is wired through the same provider interface, so you can switch the worker to a remote OCR service without changing the UI contract.
 
 ## Structure
 
@@ -121,13 +121,16 @@ OCR_PROVIDER=mock
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 ```
 
-To use a future DeepSeek-OCR-2 service implementation:
+To use a DeepSeek-OCR-2 service:
 
 ```text
 OCR_PROVIDER=deepseek_ocr2
-DEEPSEEK_OCR2_ENDPOINT=http://your-ocr-service
+DEEPSEEK_OCR2_ENDPOINT=http://your-ocr-service/ocr
 DEEPSEEK_OCR2_API_KEY=...
 ```
+
+`DEEPSEEK_OCR2_ENDPOINT` can be the full OCR URL, or a base URL. When you provide a base URL, the worker will try common OCR paths such as `/ocr`, `/api/ocr`, `/v1/ocr`, `/predict`, and `/infer`.
+For PDF uploads, the worker renders each page to PNG first, then sends that page image to the OCR service.
 
 ## API Summary
 

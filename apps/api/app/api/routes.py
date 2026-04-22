@@ -1,6 +1,7 @@
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File as UploadFileField, HTTPException, UploadFile, status
+import fitz
+from fastapi import APIRouter, Depends, File as UploadFileField, HTTPException, Response, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
@@ -73,11 +74,44 @@ def upload_file(
 @router.get("/files/{file_id}/download")
 def download_file(
     file_id: str,
+    inline: bool = False,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> FileResponse:
     file = owned_file_or_404(db, user, file_id)
-    return FileResponse(file.storage_path, media_type=file.mime_type, filename=file.original_name)
+    return FileResponse(
+        file.storage_path,
+        media_type=file.mime_type,
+        filename=file.original_name,
+        content_disposition_type="inline" if inline else "attachment",
+    )
+
+
+@router.get("/files/{file_id}/preview")
+def preview_file(
+    file_id: str,
+    page_no: int = 1,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> Response:
+    file = owned_file_or_404(db, user, file_id)
+    if file.mime_type != "application/pdf":
+        return FileResponse(
+            file.storage_path,
+            media_type=file.mime_type,
+            filename=file.original_name,
+            content_disposition_type="inline",
+        )
+
+    document = fitz.open(file.storage_path)
+    try:
+        if page_no < 1 or page_no > document.page_count:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PDF page not found")
+        page = document.load_page(page_no - 1)
+        pixmap = page.get_pixmap(matrix=fitz.Matrix(2, 2), alpha=False)
+        return Response(content=pixmap.tobytes("png"), media_type="image/png")
+    finally:
+        document.close()
 
 
 @router.post("/jobs", response_model=JobRead, status_code=status.HTTP_201_CREATED)

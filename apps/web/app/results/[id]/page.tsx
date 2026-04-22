@@ -24,6 +24,8 @@ export default function ResultPage() {
 
   const page = useMemo<PageResult | undefined>(() => result?.pages.find((item) => item.page_no === pageNo), [result, pageNo]);
   const fileUrl = result?.job.file ? `${API_BASE_URL}/api/files/${result.job.file.id}/download` : "";
+  const previewUrl = fileUrl ? `${fileUrl}?inline=1` : "";
+  const pagePreviewUrl = result?.job.file ? `${API_BASE_URL}/api/files/${result.job.file.id}/preview?page_no=${pageNo}` : "";
 
   async function refresh() {
     try {
@@ -158,9 +160,9 @@ export default function ResultPage() {
               </div>
               <div className="preview">
                 {result.job.file?.mime_type === "application/pdf" ? (
-                  <iframe src={`${fileUrl}#page=${pageNo}`} title="PDF preview" />
+                  <img alt="PDF page preview" src={pagePreviewUrl} />
                 ) : (
-                  <img alt="上传文件预览" src={fileUrl} />
+                  <img alt="上传文件预览" src={previewUrl} />
                 )}
               </div>
             </div>

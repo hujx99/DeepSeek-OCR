@@ -33,6 +33,9 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://docflow:docflow@postgres:5432/docflow}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       LOCAL_STORAGE_ROOT: /app/storage
+      OCR_PROVIDER: ${OCR_PROVIDER:-mock}
+      DEEPSEEK_OCR2_ENDPOINT: ${DEEPSEEK_OCR2_ENDPOINT:-}
+      DEEPSEEK_OCR2_API_KEY: ${DEEPSEEK_OCR2_API_KEY:-}
     ports:
       - "8000:8000"
     volumes:
@@ -51,6 +54,9 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://docflow:docflow@postgres:5432/docflow}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       LOCAL_STORAGE_ROOT: /app/storage
+      OCR_PROVIDER: ${OCR_PROVIDER:-mock}
+      DEEPSEEK_OCR2_ENDPOINT: ${DEEPSEEK_OCR2_ENDPOINT:-}
+      DEEPSEEK_OCR2_API_KEY: ${DEEPSEEK_OCR2_API_KEY:-}
     volumes:
       - ./storage:/app/storage
     depends_on:
@@ -61,8 +67,8 @@ services:
 
   web:
     build:
-      context: .
-      dockerfile: apps/web/Dockerfile
+      context: ./apps/web
+      dockerfile: Dockerfile
     environment:
       NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
     ports:
